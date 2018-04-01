@@ -16,7 +16,6 @@ m=[1];              %Particle Mass
 qi=[5];             %Charge (Positive Only)
 q_variance=0.5;     %Max Random Charge Variance
 xi=[-1];             %Initial X Position
-vxi=[-5];           %Initial X Velocity
 
 qlc=10;              %Left Bounary Controlled Charge
 qrc=10;              %Right Boundary Controlled Charge

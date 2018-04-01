@@ -21,7 +21,7 @@ vxi=[0, 0, 0, 0, 0, 0, 0, 0, 0];            %Initial X Velocity
 vyi=[0, 0, 0, 0, 0, 0, 0, 0, 0];            %Initial Y Velocity
 
 q_box=80;   %Total Distributed Charge of Borders
-res=40;      %Total Number of Discrete Border Points
+res=20;      %Total Number of Discrete Border Points
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -55,40 +55,16 @@ for i=t
         end
     end
     
-    F=zeros(n,2);
-    
-    for j=[1:n]
-        %Calculate Force from Walls
-        for p=[1:length(x0)]
-            r=[(x(j)-xy0(1,p)), (y(j)-xy0(2,p))];         
-            F(j,:)=F(j,:) +  (q(j)*q0)/(norm(r)^3) * r;
-        end
-        k=[1:n];
-        k(j)=[];
-        %Calculate Force from Particles
-        for k=k
-            r=[(x(j)-x(k)), (y(j)-y(k))];
-            F(j,:)=F(j,:) +  (q(j)*q(k))/(norm(r)^3) * r;
-        end
-        
-        %Calculate Acceleration, Velocity, Position
-        a(1,:)=F(:,1)./m';
-        a(2,:)=F(:,2)./m';
-        v=v+a.*dt;
-        xy=xy+v.*dt;
-        x=xy(1,:);
-        y=xy(2,:);
-        
-            
-    end
+    [x, y, vx, vy] = Particle_Dynamics_2D(m, q, x, y, vx, vy, xy0, q0, i, dt);
+
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Animation  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
     
-    plot(x0, y0, 'o', 'markeredgecolor', [.01*q0/qmax .88*q0/qmax 1*q0/qmax], 'markerfacecolor', [.01*q0/qmax .88*q0/qmax 1*q0/qmax], 'linewidth', 3); hold on
+    plot(x0, y0, 'o', 'markeredgecolor', [.01 .88 1]*q0/qmax, 'markerfacecolor', [.01 .88 1]*q0/qmax, 'linewidth', 3); hold on
     axis([-10, 10, -10, 10])
     for i=[1:n]  
-    plot(x(i), y(i), 'o', 'markeredgecolor',  [.01*q(i)/qmax .95*q(i)/qmax 1*q(i)/qmax], 'markerfacecolor', [.01*q(i)/qmax .95*q(i)/qmax 1*q(i)/qmax], 'linewidth', (m(i)*30/mmax)); hold on
+    plot(x(i), y(i), 'o', 'markeredgecolor',  [.01 .95 1]*q(i)/qmax, 'markerfacecolor', [.01 .95 1]*q(i)/qmax, 'linewidth', (m(i)*30/mmax)); hold on
     end
     grid on
     title('Particle Soup (2D) by Leif Wesche')
