@@ -8,14 +8,14 @@ clc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Inputs  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-dt=0.01;            %Set Time Step (seconds)
-run_time=20;        %Set Run Time (seconds)
+dt=0.0333;            %Set Time Step (seconds)
+run_time=15;        %Set Run Time (seconds)
 t=[0:dt:run_time];    
 
-m=[1, 1, 2, 0.75, 1];       %Particle Mass
-qi=[1, 2, 1, 0.75, 1];      %Charge (Positive Only)
+m=[1.5, 1, 2.5, 0.5, 1];       %Particle Mass
+qi=[1, 2, 1, 1.5, 0.75];      %Charge (Positive Only)
 q_variance=0.5;             %Max Random Charge Variance
-xi=[2, -3, 1, 4, -1];       %Initial X Position
+xi=[1.5, -2, 1, 2, -1];       %Initial X Position
 vxi=[2, -1, 0, 0, 0];       %Initial X Velocity
 
 ql=2;       %Left End Bounary Charge
@@ -33,8 +33,11 @@ x=xi;
 vx=vxi;
 
 n=length(m);
-
+F=[];
+fig=figure;
+set(gcf, 'Position', [0, 0, 1920, 1080]);
 for i=t
+    tc=round(i);
     %Apply Charge Variance
     if mod(i,0.25) == 0
         for j=[1:n]
@@ -50,19 +53,22 @@ for i=t
     
    plot(-b/2, 0, 'o', 'markeredgecolor', [.01 .88 1]*ql/qmax, 'markerfacecolor', [.01 .88 1]*ql/qmax, 'linewidth', 4); hold on
    plot(b/2, 0, 'o', 'markeredgecolor', [.01 .88 1]*qr/qmax, 'markerfacecolor', [.01 .88 1]*qr/qmax, 'linewidth', 4); hold on
-   axis([-b/2, b/2, -1, 1])  
+   axis([-b/2-1, b/2+1, -1, 1])  
    for i=[1:n]  
    plot(x(i), 0, 'o', 'markeredgecolor',  [.01 .88 1]*q(i)/qmax, 'markerfacecolor', [.01 .88 1]*q(i)/qmax, 'linewidth', (m(i)*20/mmax)); hold on
    end
    grid on
+   title(['Particle Soup (1D)        Time Elapsed:' num2str(tc), 'Sec'])
    hold off
    pause(dt)
+   %Save Video
+%    F=[F, getframe(fig)];
 end
-
-
-
-
-
+% 
+% v=VideoWriter('Particle_Soup_1D.avi','Uncompressed AVI');
+% open(v)
+% writeVideo(v,F)
+% close(v)
 
 
 

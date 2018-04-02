@@ -9,23 +9,23 @@ clc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Inputs  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 dt=0.0333;            %Set Time Step (seconds)
-run_time=12;        %Set Run Time (seconds)
+run_time=18;        %Set Run Time (seconds)
 t=[0:dt:run_time];    
 
-m=[1];              %Particle Mass
-qi=[5];             %Charge (Positive Only)
+m=[2, 2];              %Particle Mass
+qi=[5, 5];             %Charge (Positive Only)
 q_variance=0.5;     %Max Random Charge Variance
-xi=[4];            %Initial X Position
-vxi=[-3];           %Initial X Velocity
+xi=[1, -1.5];            %Initial X Position
+vxi=[-2, 1.5];           %Initial X Velocity
 
 qlc=10;             %Left Bounary Controlled Charge
 qrc=10;             %Right Boundary Controlled Charge
 qlf=10;             %Left Boundary Fixed Charge
 qrf=10;             %Right Boundary Fixed Charge
 
-b=12;               %Boundary Size
+b=6;               %Boundary Size
 
-x_desired=[-2];        %Desired Particle Position
+x_desired=[0.75, -0.75];        %Desired Particle Position
 Kp=4;               %PID Proportional Gain
 Kd=3;               %PID Derivative Gain
 Ki=0.8;               %PID Integral Gain
@@ -43,7 +43,7 @@ vxc=vxi;
 vxf=vxi;
 
 n=length(m);
-E=[xc-x_desired];
+E=[xc(1)-x_desired(1); xc(2)-x_desired(2)];
 F=[];
 fig=figure;
 set(gcf, 'Position', [0, 0, 1920, 1080]);
@@ -57,22 +57,28 @@ for i=t
         end
     end
     %Calculate Error
-    e=xc-x_desired;
+    for j=[1:n]
+    e(j,:)=xc(j)-x_desired(j);
+    end
     E=[E, e];
-    
+
     %Implement PID Control Law
+    for j=[1:n]
     if i==0
-        int=0;
+        int(j)=0;
     else
-    if i/dt <= 50
-        int=Ki*trapz([0:dt:i],E(2:end));
+    if i/dt <= 120
+        int(j)=Ki*trapz([0:dt:i],E(j,2:end));
     else
-        int=Ki*trapz([(i-50*dt):dt:i],E(end-50:end));
+        int(j)=Ki*trapz([(i-120*dt):dt:i],E(j,end-120:end));
+        %Ramp up Kp based on Integral output
+        Kp=Kp*1+3*(abs(int(1))+abs(int(2))); 
     end
     end
-    pid=Kp*e + Kd*vxc +int;
-    qrc=pid*(xc-b/2)^2;
-    qlc=-pid*(xc+b/2)^2;
+    pid(j)=Kp*e(j) + Kd*vxc(j) +int(j);
+    end
+    qrc=pid(1)*(xc(1)-b/2)^2;
+    qlc=-pid(2)*(xc(2)+b/2)^2;
     %Limit Control Outputs
     if qrc >= 10
         qrc=10;
@@ -84,12 +90,12 @@ for i=t
     elseif qlc <= - 10
         qlc=-10;
     end
-    %Turn Off Actuators at Desired Position
-    if abs(qlc) <=0.1 && abs(qrc)<= 0.1 && e<=0.01
-        qlc=0;  qrc=0; e=0;
-    end
-    
-    
+    %Turn Off Actuators at Desired Position - Wont Turn Off For Multi-Mass!
+%     if abs(qlc) <=0.1 && abs(qrc)<= 0.1 && e(1)<=0.01 && e(2)<=0.01
+%         qlc=0;  qrc=0; e=0;
+%     end
+   
+   
     %Calculate Dynamics - Controlled Particle
     [xc, vxc]=Particle_Dynamics_1D(m, q, xc, vxc, b, qlc, qrc, i, dt);
     %Calculate Dynamics - Contained Particle
@@ -133,13 +139,13 @@ for i=t
    plot(xc(i), 0, 'o', 'markeredgecolor',  ([.01 .88 1]*q(i)/qmax).^(1/4), 'markerfacecolor', ([.01 .88 1]*q(i)/qmax).^(1/4), 'linewidth', (m(i)*15/mmax)); hold on
    end
    grid on
-   title(['Dynamic Charges        Q_{L} =', num2str(qlc), '       Q_{R} =', num2str(qrc), '         X_{Desired}=', num2str(x_desired), '        Error=', num2str(e)])
+   title(['Dynamic Charges        Q_{L} =', num2str(qlc), '       Q_{R} =', num2str(qrc), '         X_{Desired}=', num2str(flip(x_desired)), '        Error=', num2str(flip(e.')), '    Kp=', num2str(Kp)])
    hold off
    pause(dt)
 %    F=[F, getframe(fig)];
 end
 
-% v=VideoWriter('Particles_Controlled_1D_3.avi','Uncompressed AVI');
+% v=VideoWriter('Particles_Controlled_2Mass_1D_1.avi','Uncompressed AVI');
 % open(v)
 % writeVideo(v,F)
 % close(v)
