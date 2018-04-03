@@ -9,14 +9,14 @@ clc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Inputs  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 dt=0.0333;            %Set Time Step (seconds)
-run_time=12;        %Set Run Time (seconds)
+run_time=9;        %Set Run Time (seconds)
 t=[0:dt:run_time];    
 
 m=[1];              %Particle Mass
 qi=[5];             %Charge (Positive Only)
 q_variance=0.5;     %Max Random Charge Variance
-xi=[4];            %Initial X Position
-vxi=[-3];           %Initial X Velocity
+xi=[4.5];            %Initial X Position
+vxi=[-2];           %Initial X Velocity
 
 qlc=10;             %Left Bounary Controlled Charge
 qrc=10;             %Right Boundary Controlled Charge
@@ -25,7 +25,7 @@ qrf=10;             %Right Boundary Fixed Charge
 
 b=12;               %Boundary Size
 
-x_desired=[-2];        %Desired Particle Position
+x_desired=[0];        %Desired Particle Position
 Kp=4;               %PID Proportional Gain
 Kd=3;               %PID Derivative Gain
 Ki=0.8;               %PID Integral Gain
@@ -128,6 +128,7 @@ for i=t
    else
    plot(b/2, 0, 'o', 'markeredgecolor', (abs([1 0.01 0.01]*qrc/qmax)).^(1/4), 'markerfacecolor', (abs([1 0.01 0.01]*qrc/qmax)).^(1/4), 'linewidth', 4); hold on
    end 
+   plot(x_desired, 0, 'kx', 'linewidth', 3)
    axis([-b/2, b/2, -1, 1])  
    for i=[1:n]  
    plot(xc(i), 0, 'o', 'markeredgecolor',  ([.01 .88 1]*q(i)/qmax).^(1/4), 'markerfacecolor', ([.01 .88 1]*q(i)/qmax).^(1/4), 'linewidth', (m(i)*15/mmax)); hold on

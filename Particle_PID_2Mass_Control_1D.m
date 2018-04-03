@@ -9,14 +9,14 @@ clc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Inputs  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 dt=0.0333;            %Set Time Step (seconds)
-run_time=18;        %Set Run Time (seconds)
+run_time=10;        %Set Run Time (seconds)
 t=[0:dt:run_time];    
 
 m=[2, 2];              %Particle Mass
 qi=[5, 5];             %Charge (Positive Only)
 q_variance=0.5;     %Max Random Charge Variance
-xi=[1, -1.5];            %Initial X Position
-vxi=[-2, 1.5];           %Initial X Velocity
+xi=[1.8, -2];            %Initial X Position
+vxi=[0, 0];           %Initial X Velocity
 
 qlc=10;             %Left Bounary Controlled Charge
 qrc=10;             %Right Boundary Controlled Charge
@@ -25,11 +25,13 @@ qrf=10;             %Right Boundary Fixed Charge
 
 b=6;               %Boundary Size
 
-x_desired=[0.75, -0.75];        %Desired Particle Position
-Kp=4;               %PID Proportional Gain
-Kd=3;               %PID Derivative Gain
-Ki=0.8;               %PID Integral Gain
+x_desired=[1, -1];        %Desired Particle Position
+Kpi=4;              %PID Proportional Gain
+Kd=4;               %PID Derivative Gain
+Ki=0.8;             %PID Integral Gain
 
+scale=1;            %Scale Kp after a certain time to help "unstick" particles? (1=yes, 0=no)
+t_scale=4;          %Time to turn on Kp scaling
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Math  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -41,6 +43,7 @@ xc=xi;
 xf=xi;
 vxc=vxi;
 vxf=vxi;
+Kp=Kpi;
 
 n=length(m);
 E=[xc(1)-x_desired(1); xc(2)-x_desired(2)];
@@ -67,14 +70,18 @@ for i=t
     if i==0
         int(j)=0;
     else
-    if i/dt <= 120
+    if i/dt <= 80
         int(j)=Ki*trapz([0:dt:i],E(j,2:end));
     else
-        int(j)=Ki*trapz([(i-120*dt):dt:i],E(j,end-120:end));
-        %Ramp up Kp based on Integral output
-        Kp=Kp*1+3*(abs(int(1))+abs(int(2))); 
+        int(j)=Ki*trapz([(i-80*dt):dt:i],E(j,end-80:end));
     end
     end
+    
+    %Ramp up Kp based on Integral output 
+    if i >= t_scale
+        Kp=Kp+Kpi*(mean(abs(int(1))+abs(int(2)))).^(2)*scale; 
+    end  
+    
     pid(j)=Kp*e(j) + Kd*vxc(j) +int(j);
     end
     qrc=pid(1)*(xc(1)-b/2)^2;
@@ -135,6 +142,7 @@ for i=t
    plot(b/2, 0, 'o', 'markeredgecolor', (abs([1 0.01 0.01]*qrc/qmax)).^(1/4), 'markerfacecolor', (abs([1 0.01 0.01]*qrc/qmax)).^(1/4), 'linewidth', 4); hold on
    end 
    axis([-b/2, b/2, -1, 1])  
+   plot(x_desired, [0, 0], 'kx', 'linewidth', 3)
    for i=[1:n]  
    plot(xc(i), 0, 'o', 'markeredgecolor',  ([.01 .88 1]*q(i)/qmax).^(1/4), 'markerfacecolor', ([.01 .88 1]*q(i)/qmax).^(1/4), 'linewidth', (m(i)*15/mmax)); hold on
    end
@@ -145,7 +153,7 @@ for i=t
 %    F=[F, getframe(fig)];
 end
 
-% v=VideoWriter('Particles_Controlled_2Mass_1D_1.avi','Uncompressed AVI');
+% v=VideoWriter('Particles_Controlled_2Mass_1D_4.avi','Uncompressed AVI');
 % open(v)
 % writeVideo(v,F)
 % close(v)
