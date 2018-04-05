@@ -1,4 +1,4 @@
-%Particle Soup (1D) Control Test2
+%Particle Soup (1D) Control
 %Leif Wesche
 
 clear all
@@ -15,26 +15,25 @@ t=[0:dt:run_time];
 m=[1];              %Particle Mass
 qi=[5];             %Charge (Positive Only)
 q_variance=0.5;     %Max Random Charge Variance
-xi=[4.5];            %Initial X Position
+xi=[4.5];           %Initial X Position
 vxi=[-2];           %Initial X Velocity
 
-qlc=10;             %Left Bounary Controlled Charge
-qrc=10;             %Right Boundary Controlled Charge
+qc_max=10;          %Controlled Charge Max Absolute Value
 qlf=10;             %Left Boundary Fixed Charge
 qrf=10;             %Right Boundary Fixed Charge
 
 b=12;               %Boundary Size
 
-x_desired=[0];        %Desired Particle Position
+x_desired=[0];      %Desired Particle Position
 Kp=4;               %PID Proportional Gain
 Kd=3;               %PID Derivative Gain
-Ki=0.8;               %PID Integral Gain
+Ki=0.8;             %PID Integral Gain
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Math  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-qmax=[qi, qlc, qrc, qlf, qrf]; qmax=max(qmax); qmax=qmax+q_variance; 
-qmin=[qi, qlc, qrc, qlf, qrf]; qmin=min(qmin); qmin=qmin-q_variance; 
+qmax=[qi, qc_max, qlf, qrf]; qmax=max(qmax); qmax=qmax+q_variance; 
+qmin=[qi, qc_max, qlf, qrf]; qmin=min(qmin); qmin=qmin-q_variance; 
 mmax=max(m);
 
 xc=xi;
@@ -74,15 +73,15 @@ for i=t
     qrc=pid*(xc-b/2)^2;
     qlc=-pid*(xc+b/2)^2;
     %Limit Control Outputs
-    if qrc >= 10
-        qrc=10;
-    elseif qrc <= - 10
-        qrc=-10;
+    if qrc >= qc_max
+        qrc=qc_max;
+    elseif qrc <= -qc_max
+        qrc=-qc_max;
     end
-    if qlc >= 10
-        qlc=10;
-    elseif qlc <= - 10
-        qlc=-10;
+    if qlc >= qc_max
+        qlc=qc_max;
+    elseif qlc <= -qc_max
+        qlc=-qc_max;
     end
     %Turn Off Actuators at Desired Position
     if abs(qlc) <=0.1 && abs(qrc)<= 0.1 && e<=0.01

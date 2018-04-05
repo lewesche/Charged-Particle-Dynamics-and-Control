@@ -11,7 +11,7 @@ F=zeros(n,2);
         %Calculate Force from Walls
         for p=[1:length(xy0)]
             r=[(x(j)-xy0(1,p)), (y(j)-xy0(2,p))];         
-            F(j,:)=F(j,:) +  (q(j)*q0)/(norm(r)^3) * r;
+            F(j,:)=F(j,:) +  (q(j)*q0(p))/(norm(r)^3) * r;
         end
         k=[1:n];
         k(j)=[];

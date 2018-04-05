@@ -8,30 +8,30 @@ clc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Inputs  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-dt=0.0333;        %Set Time Step (seconds)
+dt=0.01;        %Set Time Step (seconds)
 run_time=25;    %Set Run Time (seconds)
 t=[0:dt:run_time];    
 
-m=[1, 1, 2.8, 1, 1, 3, 1, 1, 2.2, 2, 1, 2, 2.5, 1, 3, 1];    %Particle Mass
-qi=[1, 1.7, 1, 0.8, 1, 2, 1, 1.2, 1, 1.9, 2.2, 1, 1.5, 1, 1.6, 1];       %Charge (Positive Only)
-q_variance=0;                             %Max Random Charge Variance
-xi=[-4, -4, -4, -4, -2, -2, -2, -2, 2, 2, 2, 2, 4, 4, 4, 4];           %Initial X Position
-yi=[-4, -2, 2, 4, -4, -2, 2, 4, -4, -2, 2, 4, -4, -2, 2, 4];         %Initial Y Position
-vxi=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];            %Initial X Velocity
-vyi=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];            %Initial Y Velocity
+m=[1];              %Particle Mass
+qi=[1];             %Charge (Positive Only)
+q_variance=0;       %Max Random Charge Variance
+xi=[1];             %Initial X Position
+yi=[0];             %Initial Y Position
+vxi=[5];            %Initial X Velocity
+vyi=[0];            %Initial Y Velocity
 
-q_box=100;   %Total Distributed Charge of Borders
-res=240;      %Total Number of Discrete Border Points
+q_box=120;   %Total Distributed Charge of Borders
+res=12;      %Total Number of Discrete Border Points
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Math  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 q_box=q_box/4; res=res/4;
-q0=q_box/res;
 x0=[linspace(-10, 10, res), 10*ones(1,res), linspace(10, -10, res), -10*ones(1,res)];
 y0=[-10*ones(1,res), linspace(-10, 10, res), 10*ones(1,res), linspace(10, -10, res)];
 xy0=[x0; y0];
+q0=q_box/res*ones(1, length(x0));
 
 qmax=[qi, q0]; qmax=max(qmax); qmax=qmax+q_variance; 
 qmin=[qi, q0]; qmin=min(qmin); qmin=qmin-q_variance; 
@@ -64,7 +64,9 @@ for i=t
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Animation  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
     
-    plot(x0, y0, 'o', 'markeredgecolor', [.01 .88 1]*q0/qmax, 'markerfacecolor', [.01 .88 1]*q0/qmax, 'linewidth', 3); hold on
+    for i=[1:length(q0)]
+    plot(x0, y0, 'o', 'markeredgecolor', [.01 .88 1]*q0(i)/qmax, 'markerfacecolor', [.01 .88 1]*q0(i)/qmax, 'linewidth', 3); hold on
+    end
     axis([-10, 10, -10, 10])
     for i=[1:n]  
     plot(x(i), y(i), 'o', 'markeredgecolor',  [.01 .95 1]*q(i)/qmax, 'markerfacecolor', [.01 .95 1]*q(i)/qmax, 'linewidth', (m(i)*30/mmax)); hold on
