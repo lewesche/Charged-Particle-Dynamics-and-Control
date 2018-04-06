@@ -16,19 +16,19 @@ m=[1];              %Particle Mass
 qi=[3];             %Charge (Positive Only)
 q_variance=0.5;       %Max Random Charge Variance
 xi=[1];             %Initial X Position
-yi=[3];             %Initial Y Position
-vxi=[8];            %Initial X Velocity
-vyi=[8];            %Initial Y Velocity
+yi=[1];             %Initial Y Position
+vxi=[9];            %Initial X Velocity
+vyi=[-6];            %Initial Y Velocity
 
-qc_max=12;                %Total Distributed Charge of Borders
-res=52;             %Total Number of Discrete Border Points
-b=4;
+q0_max=40;                %Total Distributed Charge of Borders
+res=12;             %Total Number of Discrete Border Points
+b=3;
 
-x_desired=[0];      %Desired X Position
-y_desired=[0];      %Desired Y Position
-Kp=1;               %PID Proportional Gain
-Kd=0;               %PID Derivative Gain
-Ki=0;             %PID Integral Gain
+x_desired=[-1];      %Desired X Position
+y_desired=[2];      %Desired Y Position
+Kp=6;               %PID Proportional Gain
+Kd=1;               %PID Derivative Gain
+Ki=0.2;             %PID Integral Gain
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Math  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -38,8 +38,8 @@ x0=[linspace(-b, b, res), b*ones(1,res), linspace(b, -b, res), -b*ones(1,res)];
 y0=[-b*ones(1,res), linspace(-b, b, res), b*ones(1,res), linspace(b, -b, res)];
 xy0=[x0; y0];
 
-qmax=[qi, qc_max]; qmax=max(qmax); qmax=qmax+q_variance; 
-qmin=[qi, qc_max]; qmin=min(qmin); qmin=qmin-q_variance; 
+qmax=[qi, q0_max]; qmax=max(qmax); qmax=qmax+q_variance; 
+qmin=[qi, q0_max]; qmin=min(qmin); qmin=qmin-q_variance; 
 mmax=max(m);
 
 n=length(m);
@@ -53,7 +53,7 @@ v=[vx; vy];
 E=[x-x_desired; y-y_desired];
 F=[];
 fig=figure;
-set(gcf, 'Position', [0, 0, 800, 400]);
+set(gcf, 'Position', [0, 0, 600, 600]);
 for i=t
     tc=round(i);
     %Apply Charge Variance
@@ -82,43 +82,20 @@ for i=t
     pid(1)=Kp*e(1) + Kd*vx +int(1);
     pid(2)=Kp*e(2) + Kd*vy +int(2);
         
-    qr=pid(1)*(x-b/2)^2;
-    ql=-pid(1)*(x+b/2)^2;
-    qt=pid(2)*(y-b/2)^2;
-    qb=-pid(1)*(y+b/2)^2;
-    %Limit Control Outputs
-    if qr >= qc_max %Right Limit
-        qr=qc_max;
-    elseif qr <= -qc_max
-        qr=-qc_max;
-    end
-    if ql >= qc_max %Left Limit
-        ql=qc_max;
-    elseif ql <= -qc_max
-        ql=-qc_max;
+    qr=pid(1)*(x-b)^2;  ql=-pid(1)*(x+b)^2; qt=pid(2)*(y-b)^2;  qb=-pid(2)*(y+b)^2;
+    qr=ones(1, res)*qr; ql=ones(1, res)*ql; qt=ones(1, res)*qt; qb=ones(1, res)*qb;
+    q0=[qb, qr, qt, ql];
+    
+    %Limit Actuator Output
+    q0=Actuator_Limits(q0, q0_max);
+    
+    %Turn Off Actuators at Desired Position
+    if abs(mean(q0)) <=0.01 && abs(e(1))<=0.004 && abs(e(2))<0.004
+        q0=zeros(size(q0)); e(1)=0; e(2)=0;
     end
     
-    if qt >= qc_max %Top Limit
-        qt=qc_max;
-    elseif qt <= -qc_max
-        qt=-qc_max;
-    end
-    if qb >= qc_max %Bottom Limit
-        qb=qc_max;
-    elseif qb <= -qc_max
-        qb=-qc_max;
-    end
-      q0=[ql, qr, qt, qb]
-    
-    qr=ones(1, res)*qr;
-    ql=ones(1, res)*ql;
-    qt=ones(1, res)*qt;
-    qb=ones(1, res)*qb;
-    
-    q0=[ql, qr, qt, qb];
     [x, y, vx, vy] = Particle_Dynamics_2D(m, q, x, y, vx, vy, xy0, q0, i, dt);
 
-    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Animation  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
     for i=[1:length(q0)]
@@ -128,13 +105,21 @@ for i=t
        plot(x0(i), y0(i), 'o', 'markeredgecolor', (abs([1 0.01 0.01]*q0(i)/qmax)).^(1/4), 'markerfacecolor', (abs([1 0.01 0.01]*q0(i)/qmax)).^(1/4), 'linewidth', 3); hold on
     end
     end
+    plot(x_desired, y_desired, 'kx', 'linewidth', 3)
     axis([-10, 10, -10, 10])
     for i=[1:n]  
-    plot(x(i), y(i), 'o', 'markeredgecolor',  ([.01 .95 1]*q(i)/qmax).^(1/4), 'markerfacecolor', ([.01 .95 1]*q(i)/qmax).^(1/4), 'linewidth', (m(i)*10/mmax)); hold on
+        plot(x(i), y(i), 'o', 'markeredgecolor',  ([.01 .95 1]*q(i)/qmax).^(1/4), 'markerfacecolor', ([.01 .95 1]*q(i)/qmax).^(1/4), 'linewidth', (m(i)*10/mmax)); hold on
     end
+    axis([-b, b, -b, b]) 
     grid on
-    title(['Particle Soup (2D)      ', 'Time Elapsed:' num2str(tc), 'Sec'])
+    title(['Particle Soup (2D)      ', '(X,Y)_{Desired}=(', num2str([x_desired, y_desired]), ')      E_{xy}=(', num2str([round(e(1),2), round(e(2),2)]), ')      Time Elapsed:' num2str(tc), 'Sec'])
     hold off
     pause(dt)
-    
+%    F=[F, getframe(fig)];    
 end
+
+% v=VideoWriter('Particles_Controlled_2D_1.avi','Uncompressed AVI');
+% open(v)
+% writeVideo(v,F)
+% close(v)
+

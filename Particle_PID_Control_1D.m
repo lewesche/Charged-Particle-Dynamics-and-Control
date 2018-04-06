@@ -133,7 +133,7 @@ for i=t
    plot(xc(i), 0, 'o', 'markeredgecolor',  ([.01 .88 1]*q(i)/qmax).^(1/4), 'markerfacecolor', ([.01 .88 1]*q(i)/qmax).^(1/4), 'linewidth', (m(i)*15/mmax)); hold on
    end
    grid on
-   title(['Dynamic Charges        Q_{L} =', num2str(qlc), '       Q_{R} =', num2str(qrc), '         X_{Desired}=', num2str(x_desired), '        Error=', num2str(e)])
+   title(['Dynamic Charges        Q_{L} =', num2str(qlc), '       Q_{R} =', num2str(qrc), '         X_{Desired}=', num2str(x_desired), '        Error=', num2str(round(e,2))])
    hold off
    pause(dt)
 %    F=[F, getframe(fig)];
