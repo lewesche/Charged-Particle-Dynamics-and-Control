@@ -1,5 +1,8 @@
 # Particle Soup
 This project simulates and visualizes dynamics between charged particles using Coloumb's law, and tests implementations of various control laws. Enter in the particle masses, charges, initial position and velocity data, and get started! 
+## Videos
+1D Simulation: Fixed boundary charges, single mass PID control, multi-mass PID control: https://youtu.be/dAiw67qKbkM
+2D Simulation: Coming soon!
 ## Basics and Setup
 The simulations are split into 1D, 2D, and 3D versions. All of the simulation files use one of the "Particle_Dynamics_(X)D.m" function files to calculate the changing states of the system using a standard forward Euler method. The dynamics are calculated by summing the forces acting on each dynamic particle, calculating the acceleration, then integrating this over a discrete time step to calculate the new system states (position, velocity). Each simulation files contains an animation section aswell. The size of each particle is proportional to its mass, and the color and brightness is proportional to its charge (blue=positive, red=negative, black=neutral). 
 ## Particle Soup
@@ -12,9 +15,4 @@ Both controlled 1D simulations use the left and right fixed charges as actuators
 The first controls a simple one mass system. The second controls a two mass system, with each actuator targeting a single mass. The two mass system includes an option to "boost" the actuator output after a certain time by scaling it according the the integral of the "error" signal (actual position-desired position), which is useful when trying to position the two particles close together. 
 ### 2D Control
 The first 2D controlled simulations simply groups the right, left, top, and bottom actuators and assigned the same charges to each set based on the outcome of a PID algorithm. For as simple as it is, it works suprisingly well even with a low number of boundary actuators. It requires the 2D Dynamics function file as well as the Actuator Limits function file to run.  
-
-
-## Videos
-1D Simulation: Fixed boundary charges, single mass PID control, multi-mass PID control: https://youtu.be/dAiw67qKbkM
-2D Simulation: Coming soon!
 
