@@ -4,12 +4,13 @@
 clear all
 close all
 clc
+addpath('C:\Users\ASUS\Desktop\Github\Particle Soup')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Inputs  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 dt=0.0333/2;        %Set Time Step (seconds)
-run_time=20;         %Set Run Time (seconds)
+run_time=24;         %Set Run Time (seconds)
 t=[0:dt:run_time];    
 
 m=[1];              %Particle Mass
@@ -21,15 +22,17 @@ vxi=[0];            %Initial X Velocity
 vyi=[0];           %Initial Y Velocity
 
 q0_max=20;          %Total Distributed Charge of Borders
-res=40;             %Total Number of Discrete Border Points
-b=6;
+res=80;             %Total Number of Discrete Border Points
+b=4;
 
 x_desired=[-1];     %Desired X Position
 y_desired=[2];      %Desired Y Position
-Kp=5;               %PID Proportional Gain
-Kd=1.5;               %PID Derivative Gain
-Ki=1;             %PID Integral Gain
+Kp=4;               %PID Proportional Gain
+Kd=0.5;             %PID Derivative Gain
+Ki=1.5;             %PID Integral Gain
 
+opt=1;              %Only Use closest actuators? 1=yes, 0=no
+                    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Math  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -37,6 +40,10 @@ res=res/4;
 x0=[linspace(-b, b, res), b*ones(1,res), linspace(b, -b, res), -b*ones(1,res)];
 y0=[-b*ones(1,res), linspace(-b, b, res), b*ones(1,res), linspace(b, -b, res)];
 xy0=[x0; y0];
+d0=(2*b)/(res-1)/opt; %Distance Between Border Charges
+if d0>=1.7778
+    d0=1.7778;
+end
 
 qmax=[qi, q0_max]; qmax=max(qmax); qmax=qmax+q_variance; 
 qmin=[qi, q0_max]; qmin=min(qmin); qmin=qmin-q_variance; 
@@ -55,13 +62,17 @@ x_desired_prev=[0]; y_desired_prev=[0];         v_desired=[0,0];
 F=[];
 fig=figure;
 set(gcf, 'Position', [0, 0, 1920, 1080]);
+
+%%%TEMP
+
+xpath=2*cos(0.75*t*1.2)-sin(2*t*1.2);
+ypath=2*sin(0.75*t*1.2)-cos(2*t*1.2);
+
 for i=t
     tc=round(i);
     %Calculate Desired Position
-    if mod(i/dt, 2*60) == 0
-        x_desired=randi([-b+1, b-1]);
-        y_desired=randi([-b+1, b-1]);
-    end
+    x_desired=2*cos(0.75*i*1.2)-sin(2*i*1.2);
+    y_desired=2*sin(0.75*i*1.2)-cos(2*i*1.2);
     
     %Apply Charge Variance
     if mod(i,0.25) == 0
@@ -83,30 +94,44 @@ for i=t
     if i==0
         int=[0, 0];
     else
-    if i/dt <= 20
+    if i/dt <= 5
         int(1)=Ki*trapz([0:dt:i],E(1, 2:end));
         int(2)=Ki*trapz([0:dt:i],E(2, 2:end));
     else
-        int(1)=Ki*trapz([(i-20*dt):dt:i],E(1, end-20:end));
-        int(2)=Ki*trapz([(i-20*dt):dt:i],E(2, end-20:end));
+        int(1)=Ki*trapz([(i-5*dt):dt:i],E(1, end-5:end));
+        int(2)=Ki*trapz([(i-5*dt):dt:i],E(2, end-5:end));
     end
     end
     pid(1)=Kp*e(1) + Kd*(vx-v_desired(1)) +int(1);
     pid(2)=Kp*e(2) + Kd*(vy-v_desired(2)) +int(2);
-        
-    qr=pid(1)*(x-b)^2;  ql=-pid(1)*(x+b)^2; qt=pid(2)*(y-b)^2;  qb=-pid(2)*(y+b)^2;
-    qr=ones(1, res)*qr; ql=ones(1, res)*ql; qt=ones(1, res)*qt; qb=ones(1, res)*qb;
+    
+    
+    
+    %Prioritize Closest Actuators
+    for p=[1:length(xy0)/4]
+        qb(p)=-pid(2) * (y-y0(p))^2 / ((d0*0.5625)^(-1*abs(x-x0(p))));
+        qr(p)=pid(1) * (x-x0(p+res))^2 / ((d0*0.5625)^(-1*abs(y-y0(p+res))));
+        qt(p)=pid(2) * (y-y0(p+2*res))^2 / ((d0*0.5625)^(-1*abs(x-x0(p+2*res))));
+        ql(p)=-pid(1) * (x+x0(p+3*res))^2 / ((d0*0.5625)^(-1*abs(y-y0(p+3*res))));
+    end
+    
+    %Run All Actuators Evenly
+%     qr=pid(1)*(x-b)^2;  
+%     ql=-pid(1)*(x+b)^2; qt=pid(2)*(y-b)^2;  qb=-pid(2)*(y+b)^2;
+%     qr=ones(1, res)*qr; 
+%     ql=ones(1, res)*ql; qt=ones(1, res)*qt; qb=ones(1, res)*qb;
     q0=[qb, qr, qt, ql];
     
     %Limit Actuator Output
     q0=Actuator_Limits(q0, q0_max);
+    q0(abs(q0)<0.02)=0; %Turn Off Low Output Actuators
     
     %Turn Off Actuators at Desired Position
-    if abs(mean(q0)) <=0.01 && abs(e(1))<=0.004 && abs(e(2))<0.004
+    if abs(mean(q0)) <=0.02 && abs(e(1))<=0.004 && abs(e(2))<0.004
         q0=zeros(size(q0)); e(1)=0; e(2)=0;
     end
     
-    [x, y, vx, vy] = Particle_Dynamics_2D(m, q, x, y, vx, vy, xy0, q0, i, dt);
+    [x, y, vx, vy, KE] = Particle_Dynamics_2D(m, q, x, y, vx, vy, xy0, q0, i, dt);
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Animation  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
@@ -117,22 +142,22 @@ for i=t
        plot(x0(i), y0(i), 'o', 'markeredgecolor', (abs([1 0.01 0.01]*q0(i)/qmax)).^(1/4), 'markerfacecolor', (abs([1 0.01 0.01]*q0(i)/qmax)).^(1/4), 'linewidth', 3); hold on
     end
     end
-    plot(x_desired, y_desired, 'kx', 'linewidth', 3)
+    plot(x_desired, y_desired, 'kx', 'linewidth', 3); plot(xpath, ypath, 'k--')
     axis([-10, 10, -10, 10])
     for i=[1:n]  
         plot(x(i), y(i), 'o', 'markeredgecolor',  ([.01 .95 1]*q(i)/qmax).^(1/4), 'markerfacecolor', ([.01 .95 1]*q(i)/qmax).^(1/4), 'linewidth', (m(i)*10/mmax)); hold on
     end
     axis([-b, b, -b, b]) 
     grid on
-    title(['Particle Soup (2D)      ', '(X,Y)_{Desired}=(', num2str([x_desired, y_desired]), ')      E_{xy}=(', num2str([round(e(1),2), round(e(2),2)]), ')      Time Elapsed:' num2str(tc), 'Sec'])
+    title(['Particle Soup (2D)      ', '(X,Y)_{Desired}=(', num2str([x_desired, y_desired]), ')      e_{xy}=(', num2str([round(e(1),2), round(e(2),2)]), ')      KE=', num2str(KE), '      Time Elapsed:' num2str(tc), 'Sec'])
     hold off
     pause(dt)
-   F=[F, getframe(fig)];    
+%     F=[F, getframe(fig)];    
 end
 
-v=VideoWriter('Particles_Controlled_2D_5.avi','Uncompressed AVI');
-v.FrameRate = 60;
-open(v)
-writeVideo(v,F)
-close(v)
+% v=VideoWriter('Particles_Controlled_2D_7.avi','Uncompressed AVI');
+% v.FrameRate = 60;
+% open(v)
+% writeVideo(v,F)
+% close(v)
 
