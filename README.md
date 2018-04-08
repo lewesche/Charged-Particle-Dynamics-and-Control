@@ -15,5 +15,5 @@ Both controlled 1D simulations use the left and right fixed charges as actuators
 
 The first controls a simple one mass system. The second controls a two mass system, with each actuator targeting a single mass. The two mass system includes an option to "boost" the actuator output after a certain time by scaling it according the the integral of the "error" signal (actual position-desired position), which is useful when trying to position the two particles close together. 
 ### 2D Control
-The first 2D controlled simulations simply groups the right, left, top, and bottom actuators and assigned the same charges to each set based on the outcome of a PID algorithm. For as simple as it is, it works suprisingly well even with a low number of boundary actuators. It requires the 2D Dynamics function file as well as the Actuator Limits function file to run.  
+The first 2D controlled simulation controls a single positivley charged particle. It works by simply grouping the right, left, top, and bottom actuators and allocating the same charges to each set based on the outcome of a PID algorithm. For as simple as it is, it works suprisingly well even with a low number of boundary actuators. It requires the 2D Dynamics function file as well as the Actuator Limits function file to run.  
 
