@@ -106,9 +106,9 @@ for i=t
    
    
     %Calculate Dynamics - Controlled Particle
-    [xc, vxc]=Particle_Dynamics_1D(m, q, xc, vxc, b, qlc, qrc, i, dt);
+    [xc, vxc, KEc, PEc, TEc]=Particle_Dynamics_1D(m, q, xc, vxc, b, qlc, qrc, i, dt);
     %Calculate Dynamics - Contained Particle
-    [xf, vxf]=Particle_Dynamics_1D(m, q, xf, vxf, b, qlf, qrf, i, dt);
+    [xf, vxf, KEf, PEf, TEf]=Particle_Dynamics_1D(m, q, xf, vxf, b, qlf, qrf, i, dt);
     
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Animation  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
