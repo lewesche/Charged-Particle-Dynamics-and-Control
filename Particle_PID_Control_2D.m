@@ -10,7 +10,7 @@ addpath('C:\Users\ASUS\Desktop\Github\Particle Soup')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Inputs  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 dt=0.0333/2;        %Set Time Step (seconds)
-run_time=18;         %Set Run Time (seconds)
+run_time=15;         %Set Run Time (seconds)
 t=[0:dt:run_time];    
 
 m=[1];              %Particle Mass
@@ -21,14 +21,14 @@ yi=[0];             %Initial Y Position
 vxi=[0];            %Initial X Velocity
 vyi=[0];           %Initial Y Velocity
 
-q0_max=20;          %Total Distributed Charge of Borders
-res=36;             %Total Number of Discrete Border Points
-b=4;
+q0_max=45;          %Total Distributed Charge of Borders
+res=44;             %Total Number of Discrete Border Points
+b=8;
 
 x_desired=[-1];     %Desired X Position
 y_desired=[2];      %Desired Y Position
-Kp=3.2;               %PID Proportional Gain
-Kd=1;             %PID Derivative Gain
+Kp=3.5;               %PID Proportional Gain
+Kd=2.5;             %PID Derivative Gain
 Ki=1.5;             %PID Integral Gain
 
 opt=1;              %Only Use closest actuators? 1=yes, 0=no
@@ -60,18 +60,16 @@ v=[vx; vy];
 E=[x-x_desired; y-y_desired];
 x_desired_prev=[0]; y_desired_prev=[0];         v_desired=[0,0];
 F=[];
-fig=figure;
-set(gcf, 'Position', [0, 0, 1920, 1080]);
-
+fig=figure('Position', [0, 0, 1920, 1080]);
 %Plot Path
-xpath=3*cos(t);
-ypath=3*sin(t);
+xpath=tan(sin(t)+cos(t));
+ypath=tan(sin(t)-cos(t));
 
 for i=t
     tc=round(i);
     %Calculate Desired Position
-    x_desired=3*cos(i);
-    y_desired=3*sin(i);
+    x_desired=tan(sin(i)+cos(i));
+    y_desired=tan(sin(i)-cos(i));
 
 %     %Calculate Desired Position
 %     if mod(i/dt, 2*60) == 0
@@ -140,7 +138,7 @@ for i=t
        plot(x0(i), y0(i), 'o', 'markeredgecolor', (abs([1 0.01 0.01]*q0(i)/qmax)).^(1/4), 'markerfacecolor', (abs([1 0.01 0.01]*q0(i)/qmax)).^(1/4), 'linewidth', 5); hold on
     end
     end
-    plot(x_desired, y_desired, 'kx', 'linewidth', 3);  plot(xpath, ypath, 'k--')
+    plot(x_desired, y_desired, 'wx', 'linewidth', 3);  plot(xpath, ypath, 'w--')
     axis([-10, 10, -10, 10])
     for i=[1:n]  
         plot(x(i), y(i), 'o', 'markeredgecolor',  ([.01 .95 1]*q(i)/qmax).^(1/4), 'markerfacecolor', ([.01 .95 1]*q(i)/qmax).^(1/4), 'linewidth', (m(i)*10/mmax)); hold on
@@ -148,14 +146,21 @@ for i=t
     axis([-b, b, -b, b]) 
     grid on
     title(['Particle Soup (2D)      ', '(X,Y)_{Desired}=(', num2str(round([x_desired, y_desired], 2)), ')      e_{xy}=(', num2str([round(e(1),2), round(e(2),2)]), ')      KE=', num2str(KE), '      Time Elapsed:' num2str(tc), 'Sec'])
+    set(gca, 'Color', 'k', 'GridColor', 'w')
     hold off
     pause(dt)
-    F=[F, getframe(fig)];    
+%    F=[F, getframe(fig)];    
 end
 
-v=VideoWriter('Particles_Controlled_2D_4.avi','Uncompressed AVI');
-v.FrameRate = 60;
-open(v)
-writeVideo(v,F)
-close(v)
+% v=VideoWriter('Particles_Controlled_2D_5.avi','Uncompressed AVI');
+% v.FrameRate = 60;
+% open(v)
+% writeVideo(v,F)
+% close(v)
 
+
+%% 
+
+figure
+plot(1,1, 'wo')
+set(gca, 'color', 'k')

@@ -23,14 +23,15 @@ PE=0;
             F(j,:)=F(j,:) +  (q(j)*q(k))/(norm(r)^3) * r;
             PE=PE+(q(j)*q(k))/norm(r);
         end
-        
+    end
+    for j=[1:n]
         %Calculate Acceleration, Velocity, Position
         a(1,:)=F(:,1)./m';
         a(2,:)=F(:,2)./m';
         
         vxy=[vx; vy];
-        vxy=vxy+a.*dt;
-        vx=vxy(1,:);  vy=vxy(2,:);
+        vxy=vxy+a.*dt;        
+        vx=vxy(1,:);  vy=vxy(2,:);      
         KE=round(sum(0.5.*m.*(abs(vx.^2)+abs(vy.^2))), 1);
         PE=round(PE, 1);
         E=PE+KE;

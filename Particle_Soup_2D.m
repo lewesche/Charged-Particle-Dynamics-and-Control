@@ -10,20 +10,20 @@ addpath('C:\Users\ASUS\Desktop\Github\Particle Soup')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Inputs  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 dt=0.0333/2;        %Set Time Step (seconds)
-run_time=25;    %Set Run Time (seconds)
+run_time=20;    %Set Run Time (seconds)
 t=[0:dt:run_time];    
 
-m=[1, 0.5];              %Particle Mass
-qi=[3, 2];             %Charge (Positive Only)
+m=[1, 1, 1, 1]/2;              %Particle Mass
+qi=[1, 1, 1, 1];             %Charge (Positive Only)
 q_variance=0;       %Max Random Charge Variance
-xi=[1, 0];             %Initial X Position
-yi=[1, 0];             %Initial Y Position
-vxi=[5, 0];            %Initial X Velocity
-vyi=[0, -2];            %Initial Y Velocity
+xi=[6, 6, -6, -6];             %Initial X Position
+yi=[6, -6, -6, 6];             %Initial Y Position
+vxi=[0, -1, 0, 1]*3;            %Initial X Velocity
+vyi=[-1, 0, 1, 0]*3;            %Initial Y Velocity
 
-q_box=120;    %Total Distributed Charge of Borders
-res=24;      %Total Number of Discrete Border Points
-b=6;
+q_box=140;    %Total Distributed Charge of Borders
+res=88;      %Total Number of Discrete Border Points
+b=10;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Math  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -47,8 +47,7 @@ vx=vxi;
 vy=vyi;
 v=[vx; vy];
 F=[];
-fig=figure;
-set(gcf, 'Position', [0, 0, 1920, 1080]);
+fig=figure('Position', [0, 0, 1920, 1080]);
 for i=t
     tc=round(i);
     %Apply Charge Variance
@@ -70,16 +69,17 @@ for i=t
     end
     axis([-b, b, -b, b])
     for i=[1:n]  
-    plot(x(i), y(i), 'o', 'markeredgecolor',  [.01 .95 1]*q(i)/qmax, 'markerfacecolor', [.01 .95 1]*q(i)/qmax, 'linewidth', (m(i)*30/mmax)); hold on
+    plot(x(i), y(i), 'o', 'markeredgecolor',  [.01 .95 1]*q(i)/qmax, 'markerfacecolor', [.01 .95 1]*q(i)/qmax, 'linewidth', (m(i)*20/mmax)); hold on
     end
     grid on
     title(['Particle Soup (2D)      ', 'KE=', num2str(KE), '      PE=', num2str(PE), '      E=', num2str(E), '      Time Elapsed:' num2str(tc), 'Sec'])
+    set(gca, 'Color', 'k', 'GridColor', 'w');
     hold off
     pause(dt)
 %     F=[F, getframe(fig)];
 end
 
-% v=VideoWriter('Particle_Soup_2D.avi','Uncompressed AVI');
+% v=VideoWriter('Particle_Soup_2D_1.avi','Uncompressed AVI');
 % open(v)
 % writeVideo(v,F)
 % close(v)

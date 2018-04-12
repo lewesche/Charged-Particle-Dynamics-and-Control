@@ -19,6 +19,8 @@ PE=0;
             F(j)=F(j) + (q(j)*q(k))/(norm(r)^3)*r;
             PE=PE + (q(j)*q(k)/abs(r));
         end
+    end
+    for j=[1:n]
         a(j)=F(j)/m(j);
         vx(j)=vx(j)+a(j)*dt*(1-12*(n-1)/100);
         KE=round(sum(0.5.*m.*abs(vx.^2)), 1);
