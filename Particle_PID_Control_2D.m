@@ -31,7 +31,6 @@ Kp=3.5;               %PID Proportional Gain
 Kd=2.5;             %PID Derivative Gain
 Ki=1.5;             %PID Integral Gain
 
-opt=1;              %Only Use closest actuators? 1=yes, 0=no
                     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Math  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -40,13 +39,10 @@ res=res/4;
 x0=[linspace(-b, b, res), b*ones(1,res), linspace(b, -b, res), -b*ones(1,res)];
 y0=[-b*ones(1,res), linspace(-b, b, res), b*ones(1,res), linspace(b, -b, res)];
 xy0=[x0; y0];
-d0=(2*b)/(res-1)/opt; %Distance Between Border Charges
-if d0>=1.7778
-    d0=1.7778;
-end
+d0=(2*b)/(res-1); %Distance Between Border Charges
 
 qmax=[qi, q0_max]; qmax=max(qmax); qmax=qmax+q_variance; 
-qmin=[qi, q0_max]; qmin=min(qmin); qmin=qmin-q_variance; 
+qmin=[qi, -q0_max]; qmin=min(qmin); qmin=qmin-q_variance; 
 mmax=max(m);
 
 n=length(m);
@@ -111,10 +107,10 @@ for i=t
     
     %Prioritize Closest Actuators
     for p=[1:length(xy0)/4]
-        qb(p)=-pid(2) * (y-y0(p))^2 / (1+500*exp(-d0*7/(opt*abs(x-x0(p)))));
-        qr(p)=pid(1) * (x-x0(p+res))^2 / (1+500*exp(-d0*7/(opt*abs(y-y0(p+res)))));
-        qt(p)=pid(2) * (y-y0(p+2*res))^2 / (1+500*exp(-d0*7/(opt*abs(x-x0(p+2*res)))));
-        ql(p)=-pid(1) * (x-x0(p+3*res))^2 / (1+500*exp(-d0*7/(opt*abs(y-y0(p+3*res)))));
+        qb(p)=-pid(2) * (y-y0(p))^2 / (1+500*exp(-d0*7/(abs(x-x0(p)))));
+        qr(p)=pid(1) * (x-x0(p+res))^2 / (1+500*exp(-d0*7/(abs(y-y0(p+res)))));
+        qt(p)=pid(2) * (y-y0(p+2*res))^2 / (1+500*exp(-d0*7/(abs(x-x0(p+2*res)))));
+        ql(p)=-pid(1) * (x-x0(p+3*res))^2 / (1+500*exp(-d0*7/(abs(y-y0(p+3*res)))));
     end
     q0=[qb, qr, qt, ql];
     
@@ -135,11 +131,10 @@ for i=t
     if  q0(i)>=0  
        plot(x0(i), y0(i), 'o', 'markeredgecolor', ([.01 .88 1]*q0(i)/qmax).^(1/4), 'markerfacecolor', ([.01 .88 1]*q0(i)/qmax).^(1/4), 'linewidth', 5); hold on
     else 
-       plot(x0(i), y0(i), 'o', 'markeredgecolor', (abs([1 0.01 0.01]*q0(i)/qmax)).^(1/4), 'markerfacecolor', (abs([1 0.01 0.01]*q0(i)/qmax)).^(1/4), 'linewidth', 5); hold on
+       plot(x0(i), y0(i), 'o', 'markeredgecolor', ([1 0.01 0.01]*q0(i)/qmin).^(1/4), 'markerfacecolor', (abs([1 0.01 0.01]*q0(i)/qmax)).^(1/4), 'linewidth', 5); hold on
     end
     end
     plot(x_desired, y_desired, 'wx', 'linewidth', 3);  plot(xpath, ypath, 'w--')
-    axis([-10, 10, -10, 10])
     for i=[1:n]  
         plot(x(i), y(i), 'o', 'markeredgecolor',  ([.01 .95 1]*q(i)/qmax).^(1/4), 'markerfacecolor', ([.01 .95 1]*q(i)/qmax).^(1/4), 'linewidth', (m(i)*10/mmax)); hold on
     end

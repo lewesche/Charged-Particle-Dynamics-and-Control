@@ -9,7 +9,7 @@ addpath('C:\Users\ASUS\Desktop\Github\Particle Soup')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Inputs  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-dt=0.0333/2;        %Set Time Step (seconds)
+dt=0.0333;        %Set Time Step (seconds)
 run_time=50;    %Set Run Time (seconds)
 t=[0:dt:run_time];    
 
@@ -24,16 +24,17 @@ vyi=[1, -1, 1, 0, 0];          %Initial Y Velocity
 vzi=[1, -1, 0, -1, -1];          %Initial Z Velocity
 
 q_box=60;       %Total Distributed Charge of Borders
-res=36;         %Total Number of Discrete Border Points
+res=20;         %Total Number of Discrete Border Points
 b=4;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Math  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 q_box=q_box/4; res=res/4;
-q0=q_box/res;
 
 [xyz0] = Square_Border_Geometry_3D(b, res);
+
+q0=q_box/res*ones(1,length(xyz0));
 
 qmax=[qi, q0]; qmax=max(qmax); qmax=qmax+q_variance; 
 qmin=[qi, q0]; qmin=min(qmin); qmin=qmin-q_variance; 
@@ -44,6 +45,10 @@ n=length(m);
 xyz=[xi; yi; zi];
 vxyz=[vxi; vyi; vzi];
 
+
+F=[];
+[sx, sy, sz]=sphere(15);
+fig=figure('Position', [0, 0, 1080, 1080], 'color', [0, 0, 0]);
 for i=t
     tc=round(i);
     %Apply Charge Variance
@@ -59,17 +64,21 @@ for i=t
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Animation  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
     
-    scatter3(xyz0(1,:), xyz0(2,:), xyz0(3,:), 'o', 'markeredgecolor', [.01 .88 1]*q0/qmax, 'markerfacecolor', [.01 .88 1]*q0/qmax, 'linewidth', 3); hold on
-    axis([-b, b, -b, b, -b, b])
-    for j=[1:n]  
-    scatter3(xyz(1,j), xyz(2,j), xyz(3,j), 'o', 'markeredgecolor',  [.01 .95 1]*q(j)/qmax, 'markerfacecolor', [.01 .95 1]*q(j)/qmax, 'linewidth', (m(j)*20/mmax)); hold on
+    hold on; axis([-b-.2, b+.2, -b-.2, b+.2, -b-.2, b+.2])
+    for j=[1:length(xyz0)]  
+        s=surf(xyz0(1,j)+sx/7, xyz0(2,j)+sy/7, xyz0(3,j)+sz/7);
+        s.FaceColor=([.01 .95 1]*q0(j)/qmax).^(1/4);  s.EdgeColor = 'none';
     end
-    grid on; 
-    view([30+10*i, 30+10*i])
-    title(['Particle Soup (3D)      ', 'Time Elapsed:' num2str(tc), 'Sec'])
-    set(gca, 'Color', 'k', 'GridColor', 'w');
-    hold off
-    pause(dt)
+    for j=[1:n]  
+        s=surf(xyz(1,j)+sx*m(j)/mmax/2.5, xyz(2,j)+sy*m(j)/mmax/2.5, xyz(3,j)+sz*m(j)/mmax/2.5); 
+        s.FaceColor=([.01 .95 1]*q(j)/qmax).^(1/4);  s.EdgeColor = 'none';
+    end
+    grid on;
+    camlight; lighting phong; view([30+10*i, 30+10*i])
+    title(['Particle Soup (3D)      ', 'Time Elapsed:' num2str(tc), 'Sec'], 'color', 'w')
+    set(gca, 'Color', 'k', 'GridColor', 'w', 'XAxisLocation', 'origin'); hold off
+    pause(dt); clf
     
 end
+
 

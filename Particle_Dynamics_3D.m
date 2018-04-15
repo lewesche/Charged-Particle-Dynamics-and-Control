@@ -11,7 +11,7 @@ function [xyz, vxyz, E] = Particle_Dynamics_3D(m, q, xyz, vxyz, xyz0, q0, i, dt)
         %Calculate Force from Boundaries
         for p=[1:length(xyz0)] 
             r=[xyz(:,j)-xyz0(:,p)]';
-            F(j,:)=F(j,:) +  (q(j)*q0)/(norm(r)^4) * r;
+            F(j,:)=F(j,:) +  (q(j)*q0(p))/(norm(r)^4) * r;
         end
         k=[1:n];
         k(j)=[];
