@@ -4,13 +4,13 @@
 clear all
 close all
 clc
-addpath('C:\Users\ASUS\Desktop\Github\Particle Soup')
+%addpath('C:\Users\ASUS\Desktop\Github\Particle Soup')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Inputs  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 dt=0.0333;        %Set Time Step (seconds)
-run_time=60;    %Set Run Time (seconds)
+run_time=60;      %Set Run Time (seconds)
 t=[0:dt:run_time];    
 
 m=[2];            %Particle Mass
@@ -18,21 +18,29 @@ qi=[2];           %Charge (Positive Only)
 q_variance=0;     %Max Random Charge Variance
 xi=[0];           %Initial X Position
 yi=[0];           %Initial Y Position
-zi=[-7];           %Initial Z Position
+zi=[-7];          %Initial Z Position
 vxi=[0];          %Initial X Velocity
 vyi=[0];          %Initial Y Velocity
 vzi=[0];          %Initial Z Velocity
 
-q0_max=50;          %Max Distributed Charge of Border Points
-res=52;            %Total Number of Discrete Border Points
+q0_max=50;        %Max Distributed Charge of Border Points
+res=52;           %Total Number of Discrete Border Points
 b=9;
 
-x_desired=[0];     %Desired X Position
-y_desired=[0];     %Desired Y Position
+x_desired=[0];    %Desired X Position
+y_desired=[0];    %Desired Y Position
 z_desired=[0];
-Kp=4;               %PID Proportional Gain
-Kd=1.75;             %PID Derivative Gain
-Ki=1.5;             %PID Integral Gain
+Kp=4;             %PID Proportional Gain
+Kd=1.75;          %PID Derivative Gain
+Ki=1.5;           %PID Integral Gain
+
+% Lorenze path
+sigma = 6;
+beta = 8/4;
+rho = 40;
+f = @(tau,Lor) [-sigma*Lor(1) + sigma*Lor(2); rho*Lor(1) - Lor(2) - Lor(1)*Lor(3); -beta*Lor(3) + Lor(1)*Lor(2)];
+[tau,Lor] = ode45(f,[0:1/30/5:12],[1 1 1]);  
+Lor_path=[Lor(:,1)'; Lor(:,2)'-6; Lor(:,3)'-40+5]/4.7;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Math  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -52,20 +60,6 @@ vxyz=[vxi; vyi; vzi];
 xyz_desired=[x_desired; y_desired; z_desired];
 E=[xyz-xyz_desired];
 xyz_desired_prev=[0; 0; 0]; v_desired=[0;0;0];
-
-
-
-% LORENZE
-sigma = 6;
-beta = 8/4;
-rho = 40;
-f = @(tau,Lor) [-sigma*Lor(1) + sigma*Lor(2); rho*Lor(1) - Lor(2) - Lor(1)*Lor(3); -beta*Lor(3) + Lor(1)*Lor(2)];
-[tau,Lor] = ode45(f,[0:1/30/5:12],[1 1 1]);     % Runge-Kutta 4th/5th order ODE solver
-Lor_path=[Lor(:,1)'; Lor(:,2)'-6; Lor(:,3)'-40+5]/4.7;
-
-
- 
-
 path_desired=[];
 
 F=[];
@@ -120,7 +114,6 @@ for i=t
         qbottom(p)=-pid(3)*abs((xyz(3)+b))^1 / (1+500*exp(-d0*7/(norm([xyz(1)-xyz0(1,(p+4*res^2)), xyz(2)-xyz0(2,(p+4*res^2))]))));
         qtop(p)=pid(3) *abs((b-xyz(3)))^1 / (1+500*exp(-d0*7/(norm([xyz(1)-xyz0(1,(p+5*res^2)), xyz(2)-xyz0(2,(p+5*res^2))]))));
     end
-    
     q0=10*[qleft, qright, qback, qfront, qbottom, qtop];
     
     %Limit Actuator Output
@@ -128,7 +121,7 @@ for i=t
     q0(abs(q0)<0.05)=0; %Turn Off Low Output Actuators
     
 
-        %Turn Off Actuators at Desired Position
+    %Turn Off Actuators at Desired Position
     if abs(e(1))<=0.04 && abs(e(2))<0.004 && abs(e(3))<0.004 && norm(vxyz)<0.05
         q0=zeros(size(q0)); e(1)=0; e(2)=0; e(3)=0;
     end
@@ -137,6 +130,7 @@ for i=t
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Animation  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+    
     %3D Plot  
     hold on; axis([-b-.2, b+.2, -b-.2, b+.2, -b-.2, b+.2])
     for j=[1:length(xyz0)]
@@ -159,14 +153,13 @@ for i=t
     camlight; lighting phong; 
     view([-90+90*cos(i/14+pi/4), 90*cos(i/14+pi/4)])
     title(['Particle Soup (3D)      ', '(X,Y,Z)_{Desired}=(', num2str(round([xyz_desired]', 2)), ')      e_{xyz}=(', num2str(round(e', 2)),  ')      Time Elapsed:' num2str(tc), 'Sec'], 'color', 'w')
-    %xlabel('x', 'color', 'w'); ylabel('y', 'color', 'w'); zlabel('z', 'color', 'w');
     grid off
     axis off
     set(gca, 'Color', 'k', 'GridColor', 'w', 'XAxisLocation', 'origin'); hold off
-    pause(dt); 
+    pause(dt); clf
     
     
-    %EZ Plot
+    %EZ Plot - Faster plotting
 %     hold on; axis([-b-.2, b+.2, -b-.2, b+.2, -b-.2, b+.2])
 %     for j=[1:length(xyz0)]
 %         if q0(j)>=0
@@ -189,15 +182,21 @@ for i=t
 %     set(gca, 'Color', 'k', 'GridColor', 'w', 'XAxisLocation', 'origin'); hold off
 %     pause(dt); clf
 
-    F=[F, getframe(fig)]; clf
+%     F=[F, getframe(fig)]; clf
 end
-    %%
-v=VideoWriter('Particle_Control_3D_18.avi','Uncompressed AVI');
-open(v)
-writeVideo(v,F)
-close(v)
     
-%% Example Paths
+% v=VideoWriter('Particle_Control_3D_11.avi','Uncompressed AVI');
+% open(v)
+% writeVideo(v,F)
+% close(v)
+    
+
+
+
+
+
+
+%% Example Paths - Un-comment a block to view the path
 clc
 close all
 
@@ -212,16 +211,15 @@ close all
 % path_desired=[4*cos(2*t).^3; 4*sin(2*t).^3; 8*t/t(end)-4];
 
 %Lorenze
-sigma = 6;
-beta = 8/4;
-rho = 40;
-f = @(tau,Lor) [-sigma*Lor(1) + sigma*Lor(2); rho*Lor(1) - Lor(2) - Lor(1)*Lor(3); -beta*Lor(3) + Lor(1)*Lor(2)];
-[tau,Lor] = ode45(f,[0:1/30/5:12],[1 1 1]);     % Runge-Kutta 4th/5th order ODE solver
-Lor_path=[Lor(:,1)'; Lor(:,2)'-6; Lor(:,3)'-40+5]/4.7;
-
-path_desired=Lor_path;
-
-
+% sigma = 6;
+% beta = 8/4;
+% rho = 40;
+% f = @(tau,Lor) [-sigma*Lor(1) + sigma*Lor(2); rho*Lor(1) - Lor(2) - Lor(1)*Lor(3); -beta*Lor(3) + Lor(1)*Lor(2)];
+% [tau,Lor] = ode45(f,[0:1/30/5:run_time/5],[1 1 1]);     % Runge-Kutta 4th/5th order ODE solver
+% Lor_path=[Lor(:,1)'; Lor(:,2)'-6; Lor(:,3)'-40+5]/4.7;
+% path_desired=Lor_path;
+% 
+% 
 plot3(path_desired(1,:), path_desired(2,:), path_desired(3,:))
 
 
