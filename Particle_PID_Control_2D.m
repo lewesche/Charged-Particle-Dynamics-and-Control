@@ -28,7 +28,7 @@ b=8;
 x_desired=[-1];     %Desired X Position
 y_desired=[2];      %Desired Y Position
 Kp=3.5;               %PID Proportional Gain
-Kd=2.5;             %PID Derivative Gain
+Kd=1.5;             %PID Derivative Gain
 Ki=1.5;             %PID Integral Gain
 
                     
@@ -58,16 +58,20 @@ x_desired_prev=[0]; y_desired_prev=[0];         v_desired=[0,0];
 F=[];
 fig=figure('Position', [0, 0, 1920, 1080]);
 %Plot Path
-xpath=tan(sin(t)+cos(t));
-ypath=tan(sin(t)-cos(t));
+xpath=cos(t)-cos(2*t);
+ypath=sin(t)+sin(2*t);
 
 for i=t
     tc=round(i);
-    %Calculate Desired Position
-    x_desired=tan(sin(i)+cos(i));
-    y_desired=tan(sin(i)-cos(i));
-
 %     %Calculate Desired Position
+%     x_desired=tan(sin(i)+cos(i));
+%     y_desired=tan(sin(i)-cos(i));
+
+    %Calculate Desired Position
+    x_desired=2*cos(i)-cos(i);
+    y_desired=2*sin(i)+sin(2*i);
+
+    %Calculate Desired Position
 %     if mod(i/dt, 2*60) == 0
 %     x_desired=randi([-3, 3]);
 %     y_desired=randi([-3, 3]);
