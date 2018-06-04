@@ -1,7 +1,7 @@
 # Particle Soup
 This project simulates and visualizes dynamics between charged particles using Coloumb's law, and tests implementations of various control laws. Enter in the particle masses, charges, initial position and velocity data, and get started! 
 ## Videos
-# 3D Simulation: https://www.youtube.com/watch?v=WoiuuW4Uc2k
+### 3D Simulation: https://www.youtube.com/watch?v=WoiuuW4Uc2k
 
 2D Simulation: https://www.youtube.com/watch?v=xp0A7h7nltE
 
