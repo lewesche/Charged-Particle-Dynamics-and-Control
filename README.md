@@ -1,11 +1,12 @@
 # Particle Soup
 This project simulates and visualizes dynamics between charged particles using Coloumb's law, and tests implementations of various control laws. Enter in the particle masses, charges, initial position and velocity data, and get started! 
 ## Videos
-1D Simulation: https://www.youtube.com/watch?v=dAiw67qKbkM
+# 3D Simulation: https://www.youtube.com/watch?v=WoiuuW4Uc2k
 
 2D Simulation: https://www.youtube.com/watch?v=xp0A7h7nltE
 
-3D Simulation: https://www.youtube.com/watch?v=WoiuuW4Uc2k
+1D Simulation: https://www.youtube.com/watch?v=dAiw67qKbkM
+
 ## Basics and Setup
 The simulations are split into 1D, 2D, and 3D versions. All of the simulation files use one of the "Particle_Dynamics_(X)D.m" function files to calculate the changing states of the system using a standard forward Euler method. The dynamics are calculated by summing the forces acting on each dynamic particle, calculating the acceleration, then integrating this over a discrete time step to calculate the new system states (position, velocity). Each simulation files contains an animation section aswell. The control simulations require the "Actuator_Limits.m" function. The size of each particle is proportional to its mass, and the color and brightness is proportional to its charge (blue=positive, red=negative, black=neutral). 
 ## Particle Soup
